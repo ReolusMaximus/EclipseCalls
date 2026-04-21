@@ -56,7 +56,11 @@ function login() {
 }
 
 async function createPeer() {
-    peer = new RTCPeerConnection();
+   peer = new RTCPeerConnection({
+    iceServers: [
+        { urls: "stun:stun.l.google.com:19302" }
+    ]
+});
 
     localStream.getTracks().forEach(track => {
         peer.addTrack(track, localStream);
@@ -148,6 +152,17 @@ socket.on("call-answered", async (answer) => {
     console.log("CALL ANSWER RECEIVED");
 
     await peer.setRemoteDescription(new RTCSessionDescription(answer));
+
+    console.log("REMOTE SET ON CALLER");
+
+    // Apply queued ICE candidates
+    pendingCandidates.forEach(c => {
+        peer.addIceCandidate(new RTCIceCandidate(c));
+    });
+
+    pendingCandidates = [];
+
+    console.log("CALLER ICE APPLIED");
 });
 
 socket.on("ice-candidate", (candidate) => {

@@ -1,3 +1,4 @@
+let pendingCandidates = [];
 console.log("APP JS LOADED");
 const socket = io();
 
@@ -118,16 +119,18 @@ async function acceptCall() {
 
     await createPeer();
 
-    console.log("SETTING REMOTE DESCRIPTION");
-
     await peer.setRemoteDescription(
         new RTCSessionDescription(window.incomingOffer)
     );
 
+    // ✅ Apply queued ICE candidates
+    pendingCandidates.forEach(candidate => {
+        peer.addIceCandidate(new RTCIceCandidate(candidate));
+    });
+    pendingCandidates = [];
+
     const answer = await peer.createAnswer();
     await peer.setLocalDescription(answer);
-
-    console.log("SENDING ANSWER");
 
     socket.emit("answer-call", {
         to: currentCallTarget,
@@ -140,5 +143,13 @@ socket.on("call-answered", async (answer) => {
 });
 
 socket.on("ice-candidate", (candidate) => {
-    peer.addIceCandidate(new RTCIceCandidate(candidate));
+    if (peer) {
+        peer.addIceCandidate(new RTCIceCandidate(candidate));
+    } else {
+        console.log("Storing ICE candidate");
+        pendingCandidates.push(candidate);
+    }
 });
+
+window.acceptCall = acceptCall;
+window.callUser = callUser;

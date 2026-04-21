@@ -1,32 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>CallCode App</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>CallCode</h1>
-
 <div id="login">
+    <h2>Login</h2>
+
     <input id="name" placeholder="Name">
     <input id="callcode" placeholder="Callcode">
+
     <button onclick="register()">Register</button>
     <button onclick="login()">Login</button>
 </div>
 
 <div id="callUI" style="display:none;">
-    <input id="target" placeholder="Call someone (callcode)">
+
+    <h2>Call System</h2>
+
+    <input id="target" placeholder="Enter callcode">
     <button onclick="callUser()">Call</button>
-</div>
 
-<div id="incoming" style="display:none;">
-    <h2 id="caller"></h2>
-    <button onclick="alert('accept clicked')">Accept</button>
-</div>
+    <div id="incoming" style="display:none;">
+        <p>Incoming Call</p>
+        <button onclick="acceptCall()">Accept</button>
+    </div>
 
-<video id="localVideo" autoplay muted></video>
-<video id="remoteVideo" autoplay></video>
+    <div class="videos">
+        <video id="localVideo" autoplay muted></video>
+        <video id="remoteVideo" autoplay></video>
+    </div>
+
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="app.js"></script>

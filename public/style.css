@@ -1,9 +1,37 @@
 body {
+    font-family: Arial, sans-serif;
+    background: #0f0f0f;
+    color: white;
     text-align: center;
-    font-family: Arial;
+    padding: 20px;
+}
+
+input {
+    padding: 10px;
+    margin: 5px;
+    width: 200px;
+}
+
+button {
+    padding: 10px 15px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+#callUI {
+    margin-top: 20px;
+}
+
+.videos {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 video {
     width: 300px;
-    margin: 10px;
+    height: 200px;
+    background: black;
+    border: 2px solid white;
 }

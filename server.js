@@ -16,6 +16,17 @@ let users = {};
 
 io.on("connection", (socket) => {
 
+    socket.on("chat-message", ({ to, message, from }) => {
+    const targetSocket = users[to];
+
+    if (targetSocket) {
+        io.to(targetSocket).emit("chat-message", {
+            message,
+            from
+        });
+    }
+});
+
     console.log("User connected:", socket.id);
 
     // LOGIN

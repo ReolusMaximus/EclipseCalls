@@ -1,105 +1,90 @@
-let pendingCandidates = [];
-console.log("APP JS LOADED");
+console.log("APP LOADED");
+
 const socket = io();
 
 let localStream;
 let peer;
-let currentCallTarget;
+let currentCallUser;
+let pendingCandidates = [];
 
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
 
 window.onload = () => {
-    console.log("PAGE LOADED");
     startMedia();
 };
 
+// ---------------- MEDIA ----------------
 async function startMedia() {
-    console.log("startMedia CALLED");
-
     try {
         localStream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: true
         });
 
+        localVideo.srcObject = localStream;
         console.log("MEDIA READY");
 
-        localVideo.srcObject = localStream;
-
     } catch (err) {
-        console.error("Media error FULL:", err);
+        console.error("Camera error:", err);
     }
 }
 
-
+// ---------------- REGISTER ----------------
 async function register() {
     const name = document.getElementById("name").value;
     const callcode = document.getElementById("callcode").value;
 
-    const res = await fetch("/register", {
+    await fetch("/register", {
         method: "POST",
-        headers: {"Content-Type":"application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, callcode })
     });
-
-    const data = await res.json();
-    alert(data.message);
 }
 
+// ---------------- LOGIN ----------------
 function login() {
     const callcode = document.getElementById("callcode").value;
+
     socket.emit("login", { callcode });
 
     document.getElementById("login").style.display = "none";
     document.getElementById("callUI").style.display = "block";
 }
 
-async function createPeer() {
-   peer = new RTCPeerConnection({
-    iceServers: [
-        { urls: "stun:stun.l.google.com:19302" }
-    ]
-});
+// ---------------- PEER ----------------
+function createPeer() {
+    peer = new RTCPeerConnection({
+        iceServers: [
+            { urls: "stun:stun.l.google.com:19302" }
+        ]
+    });
 
     localStream.getTracks().forEach(track => {
         peer.addTrack(track, localStream);
     });
 
-    peer.ontrack = e => {
-        remoteVideo.srcObject = e.streams[0];
+    peer.ontrack = (event) => {
+        remoteVideo.srcObject = event.streams[0];
     };
 
-    peer.onicecandidate = e => {
-        if (e.candidate) {
+    peer.onicecandidate = (event) => {
+        if (event.candidate && currentCallUser) {
             socket.emit("ice-candidate", {
-                to: currentCallTarget,
-                candidate: e.candidate
+                to: currentCallUser,
+                candidate: event.candidate
             });
         }
     };
 }
 
+// ---------------- CALL ----------------
 async function callUser() {
     const target = document.getElementById("target").value;
 
-    if (!target) {
-        alert("Enter a callcode");
-        return;
-    }
+    currentCallUser = target;
 
-    // 🚨 NEW CHECK (this fixes your error)
-    if (!localStream) {
-        alert("Camera not ready yet!");
-        console.log("localStream is undefined");
-        return;
-    }
-
-    currentCallTarget = target;
-
-    console.log("CALL START →", target);
-
-    await createPeer();
+    createPeer();
 
     const offer = await peer.createOffer();
     await peer.setLocalDescription(offer);
@@ -108,71 +93,77 @@ async function callUser() {
         targetCallcode: target,
         offer
     });
+
+    console.log("CALL SENT");
 }
 
-socket.on("incoming-call", ({ from, offer }) => {
-    currentCallTarget = from;
+// ---------------- INCOMING ----------------
+socket.on("incoming-call", async ({ from, offer }) => {
+    console.log("INCOMING CALL:", from);
+
+    currentCallUser = from;
+
     window.incomingOffer = offer;
 
     document.getElementById("incoming").style.display = "block";
-    document.getElementById("caller").innerText = from + " is calling...";
 });
 
+// ---------------- ACCEPT ----------------
 async function acceptCall() {
     console.log("ACCEPT CLICKED");
 
-    await createPeer();
+    createPeer();
 
-    // ✅ FIRST: set remote description
     await peer.setRemoteDescription(
         new RTCSessionDescription(window.incomingOffer)
     );
 
-    console.log("REMOTE DESCRIPTION SET");
-
-    // ✅ THEN apply queued ICE candidates
-    pendingCandidates.forEach(candidate => {
-        peer.addIceCandidate(new RTCIceCandidate(candidate));
+    // apply queued ICE
+    pendingCandidates.forEach(c => {
+        peer.addIceCandidate(new RTCIceCandidate(c));
     });
     pendingCandidates = [];
 
-    console.log("ICE CANDIDATES APPLIED");
-
-    // ✅ THEN continue
     const answer = await peer.createAnswer();
     await peer.setLocalDescription(answer);
 
     socket.emit("answer-call", {
-        to: currentCallTarget,
+        to: currentCallUser,
         answer
     });
 }
 
+// ---------------- ANSWER RECEIVED ----------------
 socket.on("call-answered", async (answer) => {
     console.log("CALL ANSWER RECEIVED");
 
-    await peer.setRemoteDescription(new RTCSessionDescription(answer));
+    await peer.setRemoteDescription(
+        new RTCSessionDescription(answer)
+    );
 
-    console.log("REMOTE SET ON CALLER");
-
-    // Apply queued ICE candidates
     pendingCandidates.forEach(c => {
         peer.addIceCandidate(new RTCIceCandidate(c));
     });
-
     pendingCandidates = [];
-
-    console.log("CALLER ICE APPLIED");
 });
 
-socket.on("ice-candidate", (candidate) => {
-    if (peer && peer.remoteDescription) {
-        peer.addIceCandidate(new RTCIceCandidate(candidate));
-    } else {
-        console.log("Queueing ICE candidate");
-        pendingCandidates.push(candidate);
+// ---------------- ICE ----------------
+socket.on("ice-candidate", async (candidate) => {
+    try {
+        const ice = new RTCIceCandidate(candidate);
+
+        if (peer && peer.remoteDescription) {
+            await peer.addIceCandidate(ice);
+        } else {
+            pendingCandidates.push(ice);
+        }
+    } catch (err) {
+        console.error("ICE error:", err);
     }
 });
 
-window.acceptCall = acceptCall;
+// ---------------- GLOBAL EXPORT ----------------
 window.callUser = callUser;
+window.acceptCall = acceptCall;
+window.login = login;
+window.register = register;

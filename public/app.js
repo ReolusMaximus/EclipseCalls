@@ -167,3 +167,29 @@ window.callUser = callUser;
 window.acceptCall = acceptCall;
 window.login = login;
 window.register = register;
+
+function sendMessage() {
+    const message = document.getElementById("chatInput").value;
+
+    if (!message || !currentCallUser) return;
+
+    socket.emit("chat-message", {
+        to: currentCallUser,
+        message,
+        from: socket.id
+    });
+
+    addMessage("You: " + message);
+    document.getElementById("chatInput").value = "";
+}
+
+socket.on("chat-message", ({ message, from }) => {
+    addMessage("Them: " + message);
+});
+
+function addMessage(msg) {
+    const div = document.createElement("div");
+    div.innerText = msg;
+
+    document.getElementById("messages").appendChild(div);
+}

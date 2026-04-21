@@ -28,9 +28,15 @@ app.post("/register", (req, res) => {
 
 io.on("connection", (socket) => {
 
-    socket.on("login", ({ callcode }) => {
-    users[callcode] = socket.id;
+ socket.on("login", ({ callcode }) => {
+    if (!users[callcode]) {
+        users[callcode] = {};
+    }
+
+    users[callcode].socketId = socket.id;
     socket.callcode = callcode;
+
+    console.log("User logged in:", callcode);
 });
 
     socket.on("call-user", ({ targetCallcode, offer }) => {
@@ -48,7 +54,7 @@ io.on("connection", (socket) => {
     });
 
    socket.on("answer-call", ({ to, answer }) => {
-    const targetSocket = users[to];
+    const targetSocket = users[to]?.socketId;
 
     if (targetSocket) {
         io.to(targetSocket).emit("call-answered", answer);

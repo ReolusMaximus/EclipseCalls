@@ -61,12 +61,21 @@ io.on("connection", (socket) => {
     }
 });
 
-    socket.on("ice-candidate", ({ to, candidate }) => {
-        const target = users[to];
-        if (target?.socketId) {
-            io.to(target.socketId).emit("ice-candidate", candidate);
+    socket.on("ice-candidate", async (candidate) => {
+    try {
+        const ice = new RTCIceCandidate(candidate);
+
+        if (peer && peer.remoteDescription) {
+            await peer.addIceCandidate(ice);
+            console.log("ICE applied immediately");
+        } else {
+            console.log("Queueing ICE candidate");
+            pendingCandidates.push(ice);
         }
-    });
+    } catch (err) {
+        console.error("ICE error:", err);
+    }
+});
 
     socket.on("disconnect", () => {
         if (socket.callcode && users[socket.callcode]) {

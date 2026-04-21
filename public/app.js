@@ -119,16 +119,22 @@ async function acceptCall() {
 
     await createPeer();
 
+    // ✅ FIRST: set remote description
     await peer.setRemoteDescription(
         new RTCSessionDescription(window.incomingOffer)
     );
 
-    // ✅ Apply queued ICE candidates
+    console.log("REMOTE DESCRIPTION SET");
+
+    // ✅ THEN apply queued ICE candidates
     pendingCandidates.forEach(candidate => {
         peer.addIceCandidate(new RTCIceCandidate(candidate));
     });
     pendingCandidates = [];
 
+    console.log("ICE CANDIDATES APPLIED");
+
+    // ✅ THEN continue
     const answer = await peer.createAnswer();
     await peer.setLocalDescription(answer);
 
@@ -145,10 +151,10 @@ socket.on("call-answered", async (answer) => {
 });
 
 socket.on("ice-candidate", (candidate) => {
-    if (peer) {
+    if (peer && peer.remoteDescription) {
         peer.addIceCandidate(new RTCIceCandidate(candidate));
     } else {
-        console.log("Storing ICE candidate");
+        console.log("Queueing ICE candidate");
         pendingCandidates.push(candidate);
     }
 });

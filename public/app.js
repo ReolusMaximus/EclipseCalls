@@ -114,12 +114,20 @@ socket.on("incoming-call", ({ from, offer }) => {
 });
 
 async function acceptCall() {
+    console.log("ACCEPT CLICKED");
+
     await createPeer();
 
-    await peer.setRemoteDescription(new RTCSessionDescription(window.incomingOffer));
+    console.log("SETTING REMOTE DESCRIPTION");
+
+    await peer.setRemoteDescription(
+        new RTCSessionDescription(window.incomingOffer)
+    );
 
     const answer = await peer.createAnswer();
     await peer.setLocalDescription(answer);
+
+    console.log("SENDING ANSWER");
 
     socket.emit("answer-call", {
         to: currentCallTarget,

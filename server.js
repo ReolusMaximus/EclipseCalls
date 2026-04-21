@@ -29,11 +29,9 @@ app.post("/register", (req, res) => {
 io.on("connection", (socket) => {
 
     socket.on("login", ({ callcode }) => {
-        if (users[callcode]) {
-            users[callcode].socketId = socket.id;
-            socket.callcode = callcode;
-        }
-    });
+    users[callcode] = socket.id;
+    socket.callcode = callcode;
+});
 
     socket.on("call-user", ({ targetCallcode, offer }) => {
         const target = users[targetCallcode];
@@ -49,12 +47,13 @@ io.on("connection", (socket) => {
         });
     });
 
-    socket.on("answer-call", ({ to, answer }) => {
-        const target = users[to];
-        if (target?.socketId) {
-            io.to(target.socketId).emit("call-answered", answer);
-        }
-    });
+   socket.on("answer-call", ({ to, answer }) => {
+    const targetSocket = users[to];
+
+    if (targetSocket) {
+        io.to(targetSocket).emit("call-answered", answer);
+    }
+});
 
     socket.on("ice-candidate", ({ to, candidate }) => {
         const target = users[to];

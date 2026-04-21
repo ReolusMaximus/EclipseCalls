@@ -55,7 +55,11 @@ function login() {
 }
 
 async function createPeer() {
-    peer = new RTCPeerConnection();
+    peer = new RTCPeerConnection({
+    iceServers: [
+        { urls: "stun:stun.l.google.com:19302" }
+    ]
+});
 
     localStream.getTracks().forEach(track => {
         peer.addTrack(track, localStream);

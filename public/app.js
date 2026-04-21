@@ -139,6 +139,8 @@ async function acceptCall() {
 }
 
 socket.on("call-answered", async (answer) => {
+    console.log("CALL ANSWER RECEIVED");
+
     await peer.setRemoteDescription(new RTCSessionDescription(answer));
 });
 

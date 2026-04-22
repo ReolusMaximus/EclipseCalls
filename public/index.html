@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Eclipse</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ── SPLASH SCREEN ─────────────────────────────────── -->
+<div id="splash">
+    <div class="splash-inner">
+        <div class="splash-logo">
+            <div class="splash-orb"></div>
+            <span class="splash-name">Eclipse</span>
+        </div>
+        <div class="splash-bar-track">
+            <div class="splash-bar-fill" id="splashBar"></div>
+        </div>
+        <span class="splash-hint">Initializing secure connection…</span>
+    </div>
+</div>
+
+<!-- ── REGISTER SCREEN ───────────────────────────────── -->
+<div id="screen-register" class="screen" style="display:none;">
+    <div class="bg-glow"></div>
+    <div class="center-card">
+        <div class="brand-row">
+            <div class="orb-sm"></div>
+            <span class="brand-name">Eclipse</span>
+        </div>
+        <h1 class="hero-text">Welcome to fast<br>communication.</h1>
+        <p class="hero-sub">Create your account to get started.</p>
+
+        <div class="form-group">
+            <label class="form-label">Your name</label>
+            <input id="name" class="form-input" placeholder="e.g. Sofia" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Choose a callcode</label>
+            <input id="callcode" class="form-input mono" placeholder="e.g. nova-9" autocomplete="off">
+        </div>
+        <button class="btn btn--primary btn--wide" onclick="register()">Create account →</button>
+        <p class="login-link">Already registered? <a href="#" onclick="showLogin()">Log in</a></p>
+    </div>
+</div>
+
+<!-- ── LOGIN SCREEN ──────────────────────────────────── -->
+<div id="screen-login" class="screen" style="display:none;">
+    <div class="bg-glow"></div>
+    <div class="center-card">
+        <div class="brand-row">
+            <div class="orb-sm"></div>
+            <span class="brand-name">Eclipse</span>
+        </div>
+        <h1 class="hero-text">Welcome<br>back.</h1>
+        <p class="hero-sub">Enter your callcode to log in.</p>
+
+        <div class="form-group">
+            <label class="form-label">Callcode</label>
+            <input id="callcode-login" class="form-input mono" placeholder="e.g. nova-9" autocomplete="off">
+        </div>
+        <button class="btn btn--primary btn--wide" onclick="loginFromScreen()">Log in →</button>
+        <p class="login-link">No account? <a href="#" onclick="showRegister()">Register</a></p>
+    </div>
+</div>
+
+<!-- ── CALL CODE SCREEN ──────────────────────────────── -->
+<div id="screen-call" class="screen" style="display:none;">
+    <div class="bg-glow"></div>
+    <header class="topbar">
+        <div class="brand-row">
+            <div class="orb-sm"></div>
+            <span class="brand-name">Eclipse</span>
+        </div>
+        <div class="status-pill online" id="statusPill">
+            <span class="status-dot"></span>
+            <span id="statusText">—</span>
+        </div>
+    </header>
+
+    <div class="center-card call-card">
+        <h2 class="call-heading">Start a call</h2>
+        <p class="hero-sub">Enter the callcode of the person you want to reach.</p>
+        <div class="form-group" style="margin-top:28px;">
+            <label class="form-label">Callcode</label>
+            <input id="target" class="form-input mono" placeholder="e.g. nova-9" autocomplete="off">
+        </div>
+        <button class="btn btn--primary btn--wide" onclick="callUser()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            Call
+        </button>
+    </div>
+</div>
+
+<!-- ── ACTIVE CALL SCREEN ────────────────────────────── -->
+<div id="screen-active-call" class="screen" style="display:none;">
+    <div class="call-stage">
+        <!-- Remote video fills the screen -->
+        <video id="remoteVideo" autoplay class="remote-video"></video>
+        <div class="remote-overlay">
+            <span class="call-label mono">Remote</span>
+        </div>
+
+        <!-- Local pip -->
+        <div class="local-pip">
+            <video id="localVideo" autoplay muted></video>
+            <span class="pip-label mono">You</span>
+        </div>
+
+        <!-- Controls bar -->
+        <div class="call-controls">
+            <button class="ctrl-btn" id="btnMute" onclick="toggleMute()" title="Mute">
+                <svg id="iconMic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                <span>Mute</span>
+            </button>
+            <button class="ctrl-btn" id="btnCam" onclick="toggleCamera()" title="Camera">
+                <svg id="iconCam" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                <span>Camera</span>
+            </button>
+            <button class="ctrl-btn ctrl-btn--end" onclick="endCall()" title="End call">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 2 2 0 0 1-.45-2.11 12.84 12.84 0 0 0 .7-2.81 2 2 0 0 1 2-1.72h.02z"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                <span>End call</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── INCOMING CALL POPUP ───────────────────────────── -->
+<div id="popup-incoming" class="popup-overlay" style="display:none;">
+    <div class="popup">
+        <div class="popup-ring">
+            <div class="ring r1"></div>
+            <div class="ring r2"></div>
+            <div class="ring r3"></div>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        </div>
+        <p class="popup-sub">Incoming call</p>
+        <h2 class="popup-caller" id="popupCaller">—</h2>
+        <div class="popup-btns">
+            <button class="btn btn--deny" onclick="denyCall()">Deny</button>
+            <button class="btn btn--accept" onclick="acceptCall()">Accept</button>
+        </div>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+<script>
+/* ── Screen routing ───────────────────────────── */
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'flex'; void el.offsetWidth; el.classList.add('screen--visible'); }
+}
+
+function showLogin() { showScreen('screen-login'); }
+function showRegister() { showScreen('screen-register'); }
+
+/* ── Splash ───────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+    const bar = document.getElementById('splashBar');
+    let w = 0;
+    const iv = setInterval(() => {
+        w += Math.random() * 18 + 4;
+        if (w >= 100) { w = 100; clearInterval(iv); }
+        bar.style.width = w + '%';
+    }, 120);
+
+    setTimeout(() => {
+        const splash = document.getElementById('splash');
+        splash.classList.add('splash--out');
+        setTimeout(() => {
+            splash.style.display = 'none';
+            showScreen('screen-register');
+        }, 600);
+    }, 2200);
+});
+
+/* ── Register ─────────────────────────────────── */
+async function register() {
+    const name     = document.getElementById('name').value.trim();
+    const callcode = document.getElementById('callcode').value.trim();
+    if (!name || !callcode) return flash('Fill in both fields.');
+
+    const res  = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, callcode })
+    });
+    const data = await res.json();
+    if (!data.success) return flash(data.message);
+
+    // auto-login after register
+    socket.emit('login', { callcode });
+    document.getElementById('statusText').textContent = callcode;
+    showScreen('screen-call');
+}
+
+/* ── Login from login screen ──────────────────── */
+function loginFromScreen() {
+    const callcode = document.getElementById('callcode-login').value.trim();
+    if (!callcode) return flash('Enter your callcode.');
+    socket.emit('login', { callcode });
+    document.getElementById('statusText').textContent = callcode;
+    showScreen('screen-call');
+}
+
+/* ── Mute / Camera toggles ────────────────────── */
+let muted = false;
+let camOff = false;
+
+function toggleMute() {
+    if (!localStream) return;
+    muted = !muted;
+    localStream.getAudioTracks().forEach(t => t.enabled = !muted);
+    const btn = document.getElementById('btnMute');
+    btn.classList.toggle('ctrl-btn--active', muted);
+    btn.querySelector('span').textContent = muted ? 'Unmute' : 'Mute';
+}
+
+function toggleCamera() {
+    if (!localStream) return;
+    camOff = !camOff;
+    localStream.getVideoTracks().forEach(t => t.enabled = !camOff);
+    const btn = document.getElementById('btnCam');
+    btn.classList.toggle('ctrl-btn--active', camOff);
+    btn.querySelector('span').textContent = camOff ? 'Show cam' : 'Camera';
+}
+
+function endCall() {
+    // Reset peer
+    if (typeof peer !== 'undefined' && peer) {
+        peer.close();
+        peer = null;
+    }
+    // Clear remote video
+    const rv = document.getElementById('remoteVideo');
+    rv.srcObject = null;
+    // Reset toggles
+    muted = false; camOff = false;
+    if (localStream) {
+        localStream.getAudioTracks().forEach(t => t.enabled = true);
+        localStream.getVideoTracks().forEach(t => t.enabled = true);
+    }
+    document.getElementById('btnMute').classList.remove('ctrl-btn--active');
+    document.getElementById('btnCam').classList.remove('ctrl-btn--active');
+    document.getElementById('btnMute').querySelector('span').textContent = 'Mute';
+    document.getElementById('btnCam').querySelector('span').textContent = 'Camera';
+
+    showScreen('screen-call');
+}
+
+/* ── Incoming popup ───────────────────────────── */
+socket.on('incoming-call', ({ from, offer }) => {
+    currentCallTarget = from;
+    window.incomingOffer = offer;
+    document.getElementById('popupCaller').textContent = from;
+    document.getElementById('popup-incoming').style.display = 'flex';
+});
+
+function denyCall() {
+    document.getElementById('popup-incoming').style.display = 'none';
+    currentCallTarget = null;
+    window.incomingOffer = null;
+}
+
+// Override acceptCall to also transition screen
+const _origAccept = window.acceptCall;
+window.acceptCall = async function() {
+    document.getElementById('popup-incoming').style.display = 'none';
+    await _origAccept();
+    showScreen('screen-active-call');
+    // move local video el into PIP
+    document.querySelector('.local-pip').querySelector('video').srcObject = localStream;
+};
+
+// When caller gets answer, show active call screen
+socket.on('call-answered', async (answer) => {
+    await peer.setRemoteDescription(new RTCSessionDescription(answer));
+    showScreen('screen-active-call');
+    document.querySelector('.local-pip video').srcObject = localStream;
+});
+
+/* ── Flash message ────────────────────────────── */
+function flash(msg) {
+    const el = document.createElement('div');
+    el.className = 'flash';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+}
+</script>
+</body>
+</html>
